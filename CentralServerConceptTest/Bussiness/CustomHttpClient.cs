@@ -8,11 +8,21 @@ using System.Threading.Tasks;
 
 namespace CentralServerConceptTest.Bussiness
 {
+
+    /// <summary>
+    ///  Example:
+    ///  
+    ///             CustomHttpClient client = new CustomHttpClient(true, @"c:\work\client.cer");
+    ///             return await client.InvokeGet("localhost", "api/WebServiceConfiguration");
+    /// 
+    /// 
+    /// 
+    /// </summary>
     public class CustomHttpClient
     {
         public bool UseSSL { get; set; }
-        private static string _clientCertificatePath { get; set; }
-        private static X509Certificate _SSLCertificate;
+        private string _clientCertificatePath { get; set; }
+        private X509Certificate _SSLCertificate;
         public CustomHttpClient()
         {
             UseSSL = false;
@@ -21,29 +31,28 @@ namespace CentralServerConceptTest.Bussiness
         {
             this.UseSSL = useSSL;
         }
+        public CustomHttpClient(bool useSSL , string clientCertificatePath)
+        {
+            this.UseSSL = useSSL;
+            SetServerCertificateValidation("", clientCertificatePath);
+        }
         /// <summary>
         /// Custom validation of certificates
         /// ALWAYS Use it in Startup.cs
         /// </summary>
         /// <param name="SSLCertificateSubjectName"></param>
-        public static void SetServerCertificateValidation (string SSLCertificateSubjectName,string clientCertificatePath)
+        public void SetServerCertificateValidation (string SSLCertificateSubjectName,string clientCertificatePath)
         {
             // Configuring SecurityProtocol to Tls12
             System.Net.ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-            // Reading content of SSL Server Certificate
-            X509Store store = new X509Store(StoreLocation.LocalMachine);
-            store.Open(OpenFlags.ReadOnly);
-            X509Certificate2Collection certificates = store.Certificates.Find(X509FindType.FindBySubjectDistinguishedName, SSLCertificateSubjectName, false);
-            _SSLCertificate = certificates[0];
-            store.Close();
-            // Configuring validation of certificate rules
+            _clientCertificatePath = clientCertificatePath;
+            _SSLCertificate = GetCertificate();
+
             ServicePointManager.ServerCertificateValidationCallback +=
                 (sender, cert, chain, error) =>
                 {
                     return cert.Issuer == _SSLCertificate.Issuer;
                 };
-            // Loading client certificate path
-            _clientCertificatePath = clientCertificatePath;
         }
         protected X509Certificate GetCertificate ()
         {

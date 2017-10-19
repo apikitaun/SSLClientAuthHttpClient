@@ -31,8 +31,8 @@ namespace CentralServerConceptTest.Controllers
 
         public async Task<string> TestStatus()
         {
-            CustomHttpClient client = new CustomHttpClient(true);
-            return await client.InvokeGet("localhost:8080", "api/Action/Status");
+            CustomHttpClient client = new CustomHttpClient(true, @"c:\work\client.cer");
+            return await client.InvokeGet("localhost", "api/WebServiceConfiguration");
         }
     }
 }
